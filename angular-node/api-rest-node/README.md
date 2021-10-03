@@ -1,3 +1,5 @@
 # Api Rest Node
 
-Api rest usada para la gestión del foro, creada con NodeJs
+Api Rest used for the forum project
+
+Remember to restore node_modules
