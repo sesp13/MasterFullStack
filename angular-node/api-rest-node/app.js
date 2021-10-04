@@ -7,10 +7,14 @@ const express = require('express');
 const app = express();
 
 //Load routes files
+const userRoutes = require('./routes/user.routes');
 
 //Middlewares
 
 //Read and parses json in the requests
+// app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 //CORS
@@ -18,12 +22,8 @@ app.use(express.json());
 // Rewrite routes
 
 //Test route
-app.get('/test', (req, res) => {
-  return res.status(200).json({
-    name: 'Sesp13',
-    message: 'Hello world from NodeJs backend',
-  });
-});
+const apiUrl = '/api';
+app.use(apiUrl, userRoutes);
 
 //Export module
 module.exports = app;
