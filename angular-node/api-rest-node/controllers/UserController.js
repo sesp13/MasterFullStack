@@ -1,9 +1,10 @@
 'use strict';
 
-const { request, response } = require('express');
+const { request, response, json } = require('express');
 const validator = require('validator');
 const bcryptjs = require('bcryptjs');
 const User = require('../models/User');
+const TokenService = require('../services/jwt');
 
 class UserController {
   /*
@@ -87,6 +88,74 @@ class UserController {
         message: 'Error: Invalid data input, try again',
       });
     }
+  };
+
+  static login = (req = request, res = response) => {
+    //Take params from request
+    const { password, email, gettoken } = req.body;
+
+    if (!password)
+      return res
+        .status(400)
+        .json({ message: 'password param must be defined' });
+
+    if (!email)
+      return res.status(400).json({ message: 'email param must be defined' });
+
+    //Validate data
+    const validateEmail = !validator.isEmpty(email) && validator.isEmail(email);
+    const validatePassword = !validator.isEmpty(password);
+
+    if (!validateEmail || !validatePassword)
+      return res.status(400).json({
+        message: 'Invalid input params',
+      });
+
+    //Search user who matches with the email
+    User.findOne({ email: email.toLowerCase() }, (err, user) => {
+      if (err)
+        return res.status(500).json({
+          message: 'Error during user checking',
+        });
+
+      if (!user)
+        return res.status(404).json({
+          message: "Error: The user doesn't exists",
+        });
+
+      // Check password
+      bcryptjs.compare(password, user.password, (err, success) => {
+        if (err)
+          return res.status(404).json({
+            message: 'Error during password check',
+          });
+
+        if (success) {
+          //Correct validation
+          //Generate JWT
+          if (gettoken) {
+            return res.status(200).json({
+              token: TokenService.createToken(user),
+            });
+          }
+
+          //Clean object - password
+          user.password = undefined;
+
+          //Return user
+          return res.status(200).json({
+            message: 'Login method',
+            status: 'Success',
+            user,
+          });
+        } else {
+          //Invalid credentials
+          return res.status(404).json({
+            message: 'Error: Invalid credentials',
+          });
+        }
+      });
+    });
   };
 }
 

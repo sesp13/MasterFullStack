@@ -9,5 +9,6 @@ const router = express.Router();
 
 //Post Methods
 router.post('/register', UserController.save);
+router.post('/login', UserController.login);
 
 module.exports = router;
