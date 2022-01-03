@@ -157,6 +157,12 @@ class UserController {
       });
     });
   };
+
+  static updateUser = (req = request, res = response) => {
+    return res.status(200).json({
+      message: 'Update user',
+    });
+  };
 }
 
 module.exports = UserController;

@@ -10,5 +10,6 @@ const router = express.Router();
 //Post Methods
 router.post('/register', UserController.save);
 router.post('/login', UserController.login);
+router.put('/update', UserController.updateUser);
 
 module.exports = router;
