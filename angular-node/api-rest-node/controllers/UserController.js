@@ -14,19 +14,17 @@ class UserController {
     const params = req.body;
 
     //Data validation with validator module
-    const validateName = !validator.isEmpty(params.name);
-    const validateSurname = !validator.isEmpty(params.surname);
-    const validateEmail =
-      !validator.isEmpty(params.email) && validator.isEmail(params.email);
-    const validatePassword = !validator.isEmpty(params.password);
+    try {
+      var validateName = !validator.isEmpty(params.name);
+      var validateSurname = !validator.isEmpty(params.surname);
+      var validateEmail =
+        !validator.isEmpty(params.email) && validator.isEmail(params.email);
+      var validatePassword = !validator.isEmpty(params.password);
+    } catch (err) {
+      return res.status(400).send({ message: 'Missing data' });
+    }
 
-    if (
-      validateEmail &&
-      validateName &&
-      validateSurname &&
-      validateEmail &&
-      validatePassword
-    ) {
+    if (validateEmail && validateName && validateSurname && validatePassword) {
       const user = new User();
       //Fill user model
       user.name = params.name;
@@ -103,8 +101,12 @@ class UserController {
       return res.status(400).json({ message: 'email param must be defined' });
 
     //Validate data
-    const validateEmail = !validator.isEmpty(email) && validator.isEmail(email);
-    const validatePassword = !validator.isEmpty(password);
+    try {
+      var validateEmail = !validator.isEmpty(email) && validator.isEmail(email);
+      var validatePassword = !validator.isEmpty(password);
+    } catch (error) {
+      return res.status(400).send({ message: 'Missing data' });
+    }
 
     if (!validateEmail || !validatePassword)
       return res.status(400).json({
@@ -159,9 +161,51 @@ class UserController {
   };
 
   static updateUser = (req = request, res = response) => {
-    return res.status(200).json({
-      message: 'Update user',
-    });
+    // Collect user data
+    const params = req.body;
+
+    // Validate data
+    try {
+      var validateName = !validator.isEmpty(params.name);
+      var validateSurname = !validator.isEmpty(params.surname);
+      var validateEmail =
+        !validator.isEmpty(params.email) && validator.isEmail(params.email);
+    } catch (err) {
+      return res.status(400).send({ message: 'Missing data' });
+    }
+
+    if (validateEmail && validateName && validateSurname) {
+      // Delete unneccesary data
+      delete params.password;
+
+      const userId = req.user.sub;
+
+      // Find and update user document
+      User.findByIdAndUpdate(
+        userId,
+        params,
+        { new: true },
+        (err, userUpdated) => {
+          if (err || !userUpdated) {
+            return res.status(500).json({
+              message: 'Error during user update',
+            });
+          }
+
+          // clean user password
+          userUpdated.password = undefined;
+
+          return res.status(200).json({
+            message: 'Success the user has been updated',
+            user: userUpdated,
+          });
+        }
+      );
+    } else {
+      return res.status(400).json({
+        message: 'Error: Invalid data input, try again',
+      });
+    }
   };
 }
 
