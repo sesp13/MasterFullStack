@@ -18,6 +18,19 @@ class TokenService {
     //Create token
     return jwt.encode(payload, process.env.SECRETKEY);
   };
-}
 
+  static validateToken = (token) => {
+    // Decode token
+    const payload = jwt.decode(token, process.env.SECRETKEY);
+
+    // Check token's expiration
+    if (payload.exp <= moment().unix()) {
+      return res.status(400).send({
+        message: 'The token has expired',
+      });
+    }
+
+    return payload;
+  };
+}
 module.exports = TokenService;
