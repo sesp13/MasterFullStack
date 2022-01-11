@@ -180,27 +180,44 @@ class UserController {
 
       const userId = req.user.sub;
 
-      // Find and update user document
-      User.findByIdAndUpdate(
-        userId,
-        params,
-        { new: true },
-        (err, userUpdated) => {
-          if (err || !userUpdated) {
-            return res.status(500).json({
-              message: 'Error during user update',
+      // Check if the email is unique
+      User.findOne({ email: params.email.toLowerCase() }, (err, userFound) => {
+        if (err)
+          return res.status(500).json({
+            message: 'Error during user checking',
+          });
+
+        if (
+          userFound &&
+          userFound.email == params.email &&
+          userFound.email != req.user.email
+        )
+          return res.status(400).json({
+            message: 'Error: The email cannot be updated',
+          });
+
+        // Find and update user document
+        User.findByIdAndUpdate(
+          userId,
+          params,
+          { new: true },
+          (err, userUpdated) => {
+            if (err || !userUpdated) {
+              return res.status(500).json({
+                message: 'Error during user update',
+              });
+            }
+
+            // clean user password
+            userUpdated.password = undefined;
+
+            return res.status(200).json({
+              message: 'Success the user has been updated',
+              user: userUpdated,
             });
           }
-
-          // clean user password
-          userUpdated.password = undefined;
-
-          return res.status(200).json({
-            message: 'Success the user has been updated',
-            user: userUpdated,
-          });
-        }
-      );
+        );
+      });
     } else {
       return res.status(400).json({
         message: 'Error: Invalid data input, try again',
