@@ -5,6 +5,8 @@ const validator = require('validator');
 const bcryptjs = require('bcryptjs');
 const User = require('../models/User');
 const TokenService = require('../services/jwt');
+const path = require('path');
+const fs = require('fs');
 
 class UserController {
   /*
@@ -222,6 +224,63 @@ class UserController {
       return res.status(400).json({
         message: 'Error: Invalid data input, try again',
       });
+    }
+  };
+
+  static uploadAvatar = async (req = request, res = response) => {
+    // Take the file from the request
+
+    // Get the name and the ext from the uploades file
+    const defaultFilename = 'No avatar uploaded';
+
+    if (!req?.files?.file0)
+      return res.status(400).json({
+        message: 'Not files sent',
+      });
+
+    // Get path and name
+    const filePath = req.files.file0.path;
+    // Warning this works in windows
+    const fileSplit = filePath.split('\\');
+    // Warning this works max/linux
+    // const fileSplit = filePath.split('/');
+
+    const filename = fileSplit[2];
+    // Get extension
+    const extSplit = filename.split('.');
+    const fileExt = extSplit[1];
+
+    // Check extension (only images) if it is not valid delete uploaded file
+    const validExtensions = ['png', 'jpg', 'jpeg', 'gif'];
+    if (!validExtensions.includes(fileExt)) {
+      fs.unlink(filePath, (err) => {
+        return res.status(400).json({ message: 'Invalid file extension' });
+      });
+    } else {
+      // Get id from authUser
+      const userId = req.user.sub;
+
+      // findOne and update user
+      User.findByIdAndUpdate(
+        userId,
+        { image: filename },
+        { new: true },
+        (err, userUpdated) => {
+          if (err)
+            return res.status(500).json({
+              message: 'Error during user update',
+              err,
+            });
+
+          //Delete password
+          userUpdated.password = undefined;
+
+          // response
+          return res
+            .status(200)
+            .json({ message: 'Success Update Avatar', userUpdated });
+        }
+      );
     }
   };
 }

@@ -20,6 +20,7 @@ exports.authenticated = function (req = request, res = response, next) {
     // Everything ok
     next();
   } catch (ex) {
+    console.log(ex);
     return res.status(401).send({
       message: `Invalid Token`,
     });
